@@ -34,6 +34,14 @@ impl Task {
     }
 }
 
+pub fn add_task(description: &str) {
+    let task = Task::new(description);
+    let task_id = &task.id.to_string();
+    let mut tasks = read_task_list();
+    tasks.push(task);
+    write_task_list(&tasks);
+    println!("Task added successfully (ID: {})", task_id);
+}
 
 fn write_task_list(tasks: &Vec<Task>) {
     let task_list_str = serde_json::to_string(tasks).expect("parsing failed");
@@ -71,4 +79,11 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_add_task() {
+        let tasks = read_task_list();
+        add_task("testing");
+        let new_tasks = read_task_list();
+        assert_eq!(tasks.len() + 1, new_tasks.len())
+    }
 }
