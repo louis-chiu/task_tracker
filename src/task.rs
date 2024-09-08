@@ -1,4 +1,4 @@
-// src/task.rs
+use std::fmt;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +7,27 @@ pub enum Status {
     Todo,
     InProgress,
     Done,
+}
+
+impl Status {
+    pub fn from_str(status: &str) -> Status {
+        match status {
+            "todo" => Status::Todo,
+            "in-progress" => Status::InProgress,
+            "done" => Status::Done,
+            _ => panic!("Invalid status..."),
+        }
+    }
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Status::Todo => write!(f, "Todo"),
+            Status::InProgress => write!(f, "In Progress"),
+            Status::Done => write!(f, "Done"),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
