@@ -112,3 +112,49 @@ impl TaskList {
 
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_first_read_task_list() {
+        let _ = fs::remove_file(TASKS_FILE);
+        let tasks = TaskList::read_task_list().unwrap().tasks;
+        assert_eq!(tasks, Vec::<Task>::new());
+    }
+
+    #[test]
+    fn test_add_task() {
+        let mut task_list = TaskList::read_task_list().unwrap();
+        task_list.add("testing");
+        let new_tasks = TaskList::read_task_list().unwrap();
+        assert_eq!(task_list.tasks.len(), new_tasks.tasks.len())
+    }
+
+    #[test]
+    fn test_delete_task() {
+        let mut task_list = TaskList::read_task_list().unwrap();
+        task_list.delete(1);
+        assert_eq!(task_list.tasks.len(), 0);
+    }
+
+    #[test]
+    fn test_update_task() {
+        let mut task_list = TaskList::read_task_list().unwrap();
+        task_list.add("testing");
+        task_list.update(1, "updated");
+        let task = task_list.tasks.iter().find(|task| task.id() == 1).unwrap();
+        assert_eq!(task.description(), "updated");
+    }
+
+    #[test]
+    fn test_list_tasks() {
+        let mut task_list = TaskList::read_task_list().unwrap();
+        task_list.add("testing");
+        task_list.add("testing");
+        task_list.add("testing");
+        let tasks = task_list.list(None);
+        assert_eq!(tasks.len(), 3);
+    }
+
+}
