@@ -1,6 +1,7 @@
 # Task Tracker
 
-This is a project for managing tasks, developed using the Rust programming language. The project includes the following features:
+This project is developed based on the guidelines and structure provided by [roadmap.sh](https://roadmap.sh/projects/task-tracker). It is a project for managing tasks, developed using the Rust programming language. The project includes the following features:
+
 
 - Add tasks
 - Update tasks
