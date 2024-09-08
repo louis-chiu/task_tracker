@@ -67,10 +67,10 @@ fn handle_command(command: &str, mut rest_args: Skip<Args>) {
                     .toggle_status(Status::InProgress, id.parse().unwrap());
             }
         },
-        "mark-in-done" => {
+        "mark-done" => {
             if let Some(id) = rest_args.nth(0) {
                 TaskList::read_task_list()
-                    .toggle_status(Status::InProgress, id.parse().unwrap());
+                    .toggle_status(Status::Done, id.parse().unwrap());
             }
         },
         _ => {
@@ -83,7 +83,7 @@ fn print_task(task: &Task) {
     println!("============================================================");
     println!("ID: {}", task.id());
     println!("Description: {}", task.description());
-    println!("Status: {:?}", task.status());
+    println!("Status: {}", task.status());
     println!("Created At: {}", task.created_at().format("%Y/%m/%d %H:%M:%S"));
     println!("Updated At: {}", task.updated_at().format("%Y/%m/%d %H:%M:%S"));
     println!("============================================================");
