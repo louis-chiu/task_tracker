@@ -36,7 +36,7 @@ cargo run -- mark-in-progress 1
 ### Mark a Task as Done
 
 ```sh
-cargo run -- mark-in-done 1
+cargo run -- mark-done 1
 ```
 
 ### List Tasks
