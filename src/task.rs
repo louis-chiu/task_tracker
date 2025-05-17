@@ -1,6 +1,6 @@
-use std::fmt;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Status {
@@ -80,4 +80,3 @@ impl Task {
         self.updated_at = Utc::now();
     }
 }
-

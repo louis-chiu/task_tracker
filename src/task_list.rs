@@ -1,7 +1,7 @@
 use super::task::{Status, Task};
+use serde_json;
 use std::fs::{self};
 use std::io::{self, ErrorKind};
-use serde_json;
 const TASKS_FILE: &str = "tasks.json";
 
 pub struct TaskList {
@@ -22,10 +22,7 @@ impl TaskList {
             return Self::new();
         }
         let next_id = tasks.last().unwrap().id() + 1;
-        Self {
-            tasks,
-            next_id
-        }
+        Self { tasks, next_id }
     }
 
     pub fn next_id(&self) -> u32 {
@@ -39,7 +36,7 @@ impl TaskList {
         let _ = Self::write_task_list(&self.tasks);
     }
 
-    pub fn update(&mut self, id: u32, description: &str) -> bool{
+    pub fn update(&mut self, id: u32, description: &str) -> bool {
         if let Some(task) = self.get(id) {
             task.set_description(description);
             let _ = Self::write_task_list(&self.tasks);
@@ -74,16 +71,16 @@ impl TaskList {
         self.tasks.iter().position(|task| task.id() == id)
     }
 
-
     pub fn list(&self, option: Option<&Status>) -> Vec<&Task> {
         match option {
-            Some(status) => self.tasks.iter()
+            Some(status) => self
+                .tasks
+                .iter()
                 .filter(|task| task.status() == status)
                 .collect(),
             None => self.tasks.iter().collect(),
         }
     }
-
 
     fn write_task_list(tasks: &Vec<Task>) -> Result<(), io::Error> {
         let content = serde_json::to_string(&tasks)?;
@@ -110,10 +107,6 @@ impl TaskList {
         }
     }
 }
-
-
-
-
 
 #[cfg(test)]
 mod tests {
@@ -159,5 +152,4 @@ mod tests {
         let tasks = task_list.list(None);
         assert_eq!(tasks.len(), 3);
     }
-
 }
