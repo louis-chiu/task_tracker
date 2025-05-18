@@ -1,77 +1,129 @@
-use std::env::{self, Args};
-use std::iter::Skip;
+use std::env;
+use std::io;
+use std::io::ErrorKind;
 use task_tracker::task::{Status, Task};
 use task_tracker::task_list::TaskList;
 
-fn main() {
-    let rest_args = env::args().skip(2);
-    match env::args().nth(1) {
-        Some(command) => {
-            handle_command(&command, rest_args);
-        }
+const TASK_LIST_PATH: &str = "tasks.json";
+
+fn main() -> Result<(), io::Error> {
+    initial_task_list()?;
+    let mut args = env::args().skip(1);
+
+    match args.next() {
+        Some(command) => execute_command(&command, &mut args),
         None => {
             println!("No command provided...");
+            Ok(())
         }
-    };
+    }
 }
 
-fn handle_command(command: &str, mut rest_args: Skip<Args>) {
+fn initial_task_list() -> Result<(), io::Error> {
+    if let Err(error) = TaskList::read_task_list(TASK_LIST_PATH) {
+        if error.kind() == ErrorKind::NotFound {
+            TaskList::create_empty_task_list(TASK_LIST_PATH)?;
+        }
+    }
+    Ok(())
+}
+
+fn execute_command(
+    command: &str,
+    mut rest_args: impl Iterator<Item = String>,
+) -> Result<(), io::Error> {
     match command {
         "add" => {
-            if let Some(description) = rest_args.nth(0) {
-                println!("{description}");
-                let mut tasks = TaskList::read_task_list();
-                let task_id = tasks.next_id();
-                tasks.add(&description);
-                println!("Task added successfully (ID: {})", task_id);
-            };
+            rest_args
+                .next()
+                .map(|description| {
+                    println!("{description}");
+                    TaskList::read_task_list(TASK_LIST_PATH).and_then(|mut tasks| {
+                        let task_id = tasks.next_id();
+                        tasks.add(&description);
+                        println!("Task added successfully (ID: {})", task_id);
+                        Ok(())
+                    })
+                })
+                .unwrap_or_else(|| {
+                    println!("No description provided...");
+                    Ok(())
+                })?;
         }
         "update" => {
-            if let Some(id) = rest_args.nth(0) {
-                if let Some(description) = rest_args.nth(1) {
-                    TaskList::read_task_list().update(id.parse().unwrap(), &description);
-                } else {
-                    panic!("No description provided...");
-                }
-            } else {
-                panic!("No ID provided...");
-            }
+            rest_args
+                .next()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "No ID provided..."))
+                .and_then(|id| {
+                    rest_args
+                        .next()
+                        .ok_or_else(|| {
+                            io::Error::new(
+                                io::ErrorKind::InvalidInput,
+                                "No description provided...",
+                            )
+                        })
+                        .and_then(|description| {
+                            let mut tasks = TaskList::read_task_list(TASK_LIST_PATH)?;
+                            tasks.update(id.parse().unwrap(), &description);
+                            Ok(())
+                        })
+                })?;
         }
         "delete" => {
-            if let Some(id) = rest_args.nth(0) {
-                TaskList::read_task_list().delete(id.parse().unwrap());
-            } else {
-                println!("No ID provided...");
-            }
+            rest_args
+                .next()
+                .map(|id| {
+                    TaskList::read_task_list(TASK_LIST_PATH).and_then(|mut task_list| {
+                        task_list.delete(id.parse().unwrap());
+                        Ok(())
+                    })
+                })
+                .unwrap_or_else(|| {
+                    println!("No ID provided...");
+                    Ok(())
+                })?;
         }
         "list" => {
-            if let Some(status) = rest_args.nth(0) {
-                let status = Status::from_str(&status);
-                TaskList::read_task_list()
-                    .list(Some(&status))
-                    .into_iter()
-                    .for_each(print_task);
-            } else {
-                TaskList::read_task_list()
-                    .list(None)
-                    .into_iter()
-                    .for_each(|task| print_task(task));
-            }
+            let status = rest_args.next().map(|status| Status::from_str(&status));
+            TaskList::read_task_list(TASK_LIST_PATH)?
+                .list(status.as_ref())
+                .into_iter()
+                .for_each(print_task);
         }
         "mark-in-progress" => {
-            if let Some(id) = rest_args.nth(0) {
-                TaskList::read_task_list().toggle_status(Status::InProgress, id.parse().unwrap());
-            }
+            rest_args
+                .next()
+                .map(|id| {
+                    TaskList::read_task_list(TASK_LIST_PATH).and_then(|mut task_list| {
+                        task_list.toggle_status(Status::InProgress, id.parse().unwrap());
+                        Ok(())
+                    })
+                })
+                .unwrap_or_else(|| {
+                    println!("No ID provided...");
+                    Ok(())
+                })?;
         }
         "mark-done" => {
-            if let Some(id) = rest_args.nth(0) {
-                TaskList::read_task_list().toggle_status(Status::Done, id.parse().unwrap());
-            }
+            rest_args
+                .next()
+                .map(|id| {
+                    TaskList::read_task_list(TASK_LIST_PATH).and_then(|mut task_list| {
+                        task_list.toggle_status(Status::Done, id.parse().unwrap());
+                        Ok(())
+                    })
+                })
+                .unwrap_or_else(|| {
+                    println!("No ID provided...");
+                    Ok(())
+                })?;
         }
         _ => {
             println!("Invalid command...");
         }
-    }
+    };
+    Ok(())
 }
 
 fn print_task(task: &Task) {
